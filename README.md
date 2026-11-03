@@ -1,4 +1,4 @@
-# Kamelib
+# kamelib
 Kamelib is my own version of the standard C library to replace it.
 
 My goal with it is to be able to fully use it without the glibc library. It is still a work in progress so you still cant fully achieve this.
