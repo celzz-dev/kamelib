@@ -25,9 +25,9 @@ A header-only C standard library replacement built from scratch for Linux, with 
 
 int main(void) {
     int *nums = (int *)_malloc(sizeof(int) * 4);
-    nums = 42;
+    nums[0] = 42;
 
-    _print("Value: %d\n", nums);
+    _print("Value: %d\n", nums[0]);
 
     _free(nums);
     return 0;
