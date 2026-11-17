@@ -1,26 +1,72 @@
 # kamelib
-kamelib is my own version of the standard C library to replace it.
 
-My goal with it is to be able to fully use it without the glibc library. It is still a work in progress so you still can't fully achieve this.
+A header-only C standard library replacement built from scratch for Linux, with the long-term goal of running without `glibc`.
 
-There are currently 6 mini libraries that make up kamelib (with more in the future) kmem, kproc, kio, kstr, ktypes, and kvec.
+> Note: This project is an active work in progress.
 
-kmem is my own memory allocator with the functions _malloc, _realloc, _free, and other helper functions.
+## Modules
 
-kproc is my memory manipulator. It has functions like proc_getpid, proc_readmem, and proc_writemem for changing or reading memory in a process.
-It has other functions like proc_scanmem and proc_rescanmem that take a process id, a value, and alist (which is a simple address list vector found in kvec) and then scan the memory of the process for that value
-or rescan again to find the exact value. It is inspired from cheat engine and PINCE.
+| Header | Description | Key Functions / Types |
+| :--- | :--- | :--- |
+| `kamelib.h` | Umbrella header that includes all `kamelib` modules. | — |
+| `kmem.h` | Custom heap allocator built on `mmap` with block splitting and coalescing. | `_malloc`, `_realloc`, `_free` |
+| `kio.h` | Formatted output built directly over the Linux `write` syscall. | `_print`, `_printin` |
+| `kproc.h` | Process memory reader, writer, and scanner using `/proc/<pid>/mem` (inspired by Cheat Engine and PINCE). | `proc_getpid`, `proc_readmem`, `proc_writemem`, `proc_scanmem`, `proc_rescanmem` |
+| `kstr.h` | Dynamic string implementation similar to C++ `std::string`. | Custom string struct & helpers |
+| `kvec.h` | Dynamic vector implementations for strings and memory addresses. | String vector, `alist` (address list) |
+| `ktypes.h` | Core type definitions. | `usize`, base types |
 
-kio is my input and output library. But I still don't have any input functions (as I said kamelib is still a work in progress). The functions that I currently have are _print which acts like printf but only has a limited amount of identifiers (%d, %c, %cs for char pointer or array, %s for my own string, %us for my own type usize, and %v for my own vector). _printin acts like snprintf, it also has the same limited identifiers for now.
+## Quick Start
 
-kstr is my own string library. I made it to have similar strings to c++. It has many functions that I won't cover here now (i will add them here in the future because I want to get this git stuff working first)
+`kamelib` is header-only. Copy the `.h` files into your project and include `kamelib.h` (or only the specific headers you need):
 
-kvec is the string vector library. I also made it to have similar vectors to c++. Again, it has many functions that I will add them here later.
+```c
+#include "kamelib.h"
 
-The string and the vector structs only work with each other (because they were the first ones I made and I didn't plan to add any more types to them) so in the future I will make different vectors for other data types (like alist). 
+int main(void) {
+    int *nums = (int *)_malloc(sizeof(int) * 4);
+    nums = 42;
 
-The code currently doesn't have comments. I am planning for a future patch to add comments in the code to further explain the flow of it.
+    _print("Value: %d\n", nums);
 
-Currently some stuff only work on Linux like the kproc library, other stuff might work more on macOS than windows due to both being unix systems, but I haven't tested it there so they aren't really supported for now.
+    _free(nums);
+    return 0;
+}
+```
 
-kamelib is header-only, to include the libraries you can just download the header files and either include kamelib.h only or include the ones you need.
+Compile with GCC:
+
+```bash
+gcc main.c -o main
+```
+
+## Format Specifiers (`kio.h`)
+
+`_print` (like `printf`) and `_printin` (like `snprintf`) currently support these specifiers:
+
+| Specifier | Type | Supported In | Description |
+| :--- | :--- | :--- | :--- |
+| `%d` | `int` | `_print`, `_printin` | Signed decimal integer |
+| `%c` | `char` | `_print`, `_printin` | Single ASCII character |
+| `%cs` | `char *` / `char[]` | `_print`, `_printin` | Null-terminated C string |
+| `%s` | `kstr` | `_print`, `_printin` | Custom `kamelib` string |
+| `%us` | `usize` | `_print`, `_printin` | Custom unsigned size type |
+| `%v` | `kvec` | `_print` only | Custom `kamelib` vector |
+
+## Platform Support
+
+* **Linux:** Supported (required for `kproc.h` and raw syscalls).
+* **macOS / Windows:** Not currently supported.
+
+## Roadmap
+
+* [ ] Add input functions to `kio.h`
+* [ ] Generalize `kvec.h` to support arbitrary data types beyond strings and `alist`
+* [ ] Add more format specifiers to `_print` and `_printin`
+* [ ] Add comments across the codebase explaining internal implementation details
+* [ ] Full `-nostdlib` compatibility
+
+## License
+
+[MIT](LICENSE)
+
